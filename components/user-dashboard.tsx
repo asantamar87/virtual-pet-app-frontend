@@ -5,6 +5,7 @@ import { PetCard } from "./pet-card"
 import { CreatePetDialog } from "./create-pet-dialog"
 import { Loader2, Plus, PawPrint } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DashboardHeader } from "./dashboard-header"
 
 export function UserDashboard() {
   const [pets, setPets] = useState<PetResponse[]>([])
@@ -27,9 +28,15 @@ export function UserDashboard() {
   if (loading) return <Loader2 className="mx-auto mt-20 animate-spin" />
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Mis Mascotas</h1>
+     <div className="min-h-screen bg-background">
+      <DashboardHeader />
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold">Mis Mascotas</h2>
+            <p className="text-muted-foreground mt-1">Cuida y alimenta a tus mascotas virtuales</p>
+          </div>
         <Button onClick={() => setOpen(true)}><Plus className="mr-2" /> Nueva Mascota</Button>
       </div>
 
@@ -45,6 +52,7 @@ export function UserDashboard() {
           ))}
         </div>
       )}
+    </main>
       <CreatePetDialog open={open} onOpenChange={setOpen} onSuccess={loadPets} />
     </div>
   )

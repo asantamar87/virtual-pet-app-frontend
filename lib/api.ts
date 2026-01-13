@@ -24,12 +24,12 @@ export interface PetResponse {
   health: number
   ownerUsername: string
 }
-
 class ApiClient {
   private getToken(): string | null {
     if (typeof window === "undefined") return null;
     const token = localStorage.getItem("token");
     if (!token) return null;
+    // Limpieza de comillas extras si existen
     return token.replace(/^["'](.+)["']$/, '$1').trim();
   }
 
@@ -47,30 +47,32 @@ class ApiClient {
 
   private async handleResponse(response: Response) {
     const text = await response.text();
+    let data;
+    
+    // Intentamos parsear solo si hay contenido
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Si falla el parseo, guardamos el texto plano
+      data = null;
+    }
     
     if (!response.ok) {
       if (response.status === 401 && typeof window !== "undefined") {
-        console.warn("Sesión expirada o no autorizada");
         localStorage.clear();
         if (window.location.pathname !== "/") window.location.href = "/";
       }
       
-      let errorMessage = "Error en la petición";
-      try {
-        const errorData = JSON.parse(text);
-        errorMessage = errorData.message || errorMessage;
-      } catch {
-        errorMessage = text || errorMessage;
-      }
+      const errorMessage = data?.message || text || "Error en la petición";
       throw new Error(errorMessage);
     }
 
-    return text ? JSON.parse(text) : null;
+    return data || { message: text }; // Devolvemos el objeto parseado o el texto envuelto
   }
 
   // --- Autenticación ---
 
-  async register(data: RegisterRequest): Promise<any> {
+  async register(data: RegisterRequest): Promise<{ message: string }> {
     const res = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: this.getHeaders(false),
@@ -89,10 +91,9 @@ class ApiClient {
     const result = await this.handleResponse(res);
     
     if (result && result.accessToken) {
-      // Normalizamos el objeto para el AuthContext
       const authData = {
         ...result,
-        token: result.accessToken, // Next.js usará .token
+        token: result.accessToken,
         username: result.username || data.username,
         roles: result.roles || ["ROLE_USER"]
       };
@@ -110,37 +111,25 @@ class ApiClient {
 
   // --- Mascotas ---
 
-  // Para el Dashboard de Usuario
   async getMyPets(): Promise<PetResponse[]> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/pets`, {
-        method: "GET",
-        headers: this.getHeaders(),
-      });
-      const data = await this.handleResponse(res);
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error("Error fetching pets:", error);
-      return [];
-    }
+    const res = await fetch(`${API_BASE_URL}/pets`, {
+      method: "GET",
+      headers: this.getHeaders(),
+    });
+    const data = await this.handleResponse(res);
+    return Array.isArray(data) ? data : [];
   }
 
-  // Para el Dashboard de Admin
   async getAllPets(): Promise<PetResponse[]> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/pets/all`, {
-        method: "GET",
-        headers: this.getHeaders(),
-      });
-      const data = await this.handleResponse(res);
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error("Error fetching all pets:", error);
-      return [];
-    }
+    const res = await fetch(`${API_BASE_URL}/pets/all`, {
+      method: "GET",
+      headers: this.getHeaders(),
+    });
+    const data = await this.handleResponse(res);
+    return Array.isArray(data) ? data : [];
   }
 
-  async createPet(data: PetRequest): Promise<PetResponse> {
+  async createPet(data: { name: string; species: string }): Promise<PetResponse> {
     const res = await fetch(`${API_BASE_URL}/pets`, {
       method: "POST",
       headers: this.getHeaders(),
@@ -163,7 +152,7 @@ class ApiClient {
       method: "DELETE",
       headers: this.getHeaders(),
     });
-    if (!res.ok) throw new Error("Error al eliminar la mascota");
+    if (!res.ok) await this.handleResponse(res);
   }
 }
 
