@@ -1,79 +1,42 @@
-# 🐾 Virtual Pet API - Backend
+# 🐾 Virtual Pet Frontend
 
-This is the robust RESTful Backend for the **Virtual Pet** application, developed using **Java 17** and **Spring Boot 3**. It handles the core business logic, pet state management, and secure authentication.
+This is the client-side application for the **Virtual Pet API**, built with modern web technologies and AI-assisted design.
 
 ## 🚀 Tech Stack
+- **Framework:** [Next.js](https://nextjs.org/) / [React](https://react.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **UI Architecture:** Generated via **v0 by Vercel** for a professional and responsive interface.
+- **State Management:** React Hooks (useState, useEffect).
+- **Authentication:** JWT (JSON Web Tokens) stored in `localStorage`.
 
-* **Framework:** [Spring Boot 3](https://spring.io/projects/spring-boot)
-* **Security:** Spring Security & JWT (JSON Web Tokens)
-* **Database:** H2 (In-Memory) / PostgreSQL
-* **ORM:** Spring Data JPA / Hibernate
-* **Language:** Java 17
-* **Documentation:** Swagger / OpenAPI (Optional)
+## 🛠️ Key Features
+- **Interactive Dashboard:** Real-time visualization of pet stats (Health, Happiness, Hunger, Energy).
+- **Secure Authentication:** Dedicated login and registration flows.
+- **Role-Based UI:** Conditional rendering based on user permissions (User vs. Admin).
+- **Responsive Design:** Fully optimized for mobile and desktop viewing.
 
-## 🛠️ Key Technical Features
+## 🔌 API Integration
+The frontend communicates with a Spring Boot REST API. 
 
-### 🔐 Authentication & Authorization
-* **JWT Stateless Auth:** Secure communication using Bearer tokens.
-* **RBAC (Role-Based Access Control):** * `ROLE_USER`: Can create and manage their own pets.
-    * `ROLE_ADMIN`: Can monitor all pets across the entire system.
-* **Method Security:** Annotated controllers using `@PreAuthorize` for granular access control.
 
-### 🧬 Business Logic
-* **State Machine:** Pets have dynamic attributes (Hunger, Energy, Happiness, Health) that update through specific service actions (`feed()`, `play()`, `sleep()`).
-* **Ownership Validation:** Secure logic ensuring users can only interact with pets they own.
 
-### 📦 Optimized Data Transfer (DTOs)
-* **Java Records:** Used for immutable and lightweight data transfer.
-* **Infinite Recursion Prevention:** Specifically designed DTOs to break circular references between `User` and `Pet` entities during JSON serialization.
+### Authentication Flow:
+1. User logs in -> Receives **JWT**.
+2. Token is saved in the browser.
+3. Every request includes an `Authorization: Bearer <token>` header.
+4. **CORS Policy:** Configured to allow requests to `http://localhost:8080`.
 
-## 🛠️ Setup and Installation
+## 🏃 Getting Started
+First, install the dependencies:
+```bash
+npm install
+# or
+yarn install
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/your-username/virtualpet-api.git](https://github.com/your-username/virtualpet-api.git)
-    cd virtualpet-api
-    ```
+Then, run the development server:
 
-2.  **Configure Database:**
-    By default, the project uses **H2 In-Memory Database**. Configuration can be found in `src/main/resources/application.properties`.
+npm run dev
+# or
+yarn dev
 
-3.  **Build and Run:**
-    ```bash
-    ./mvnw spring-boot:run
-    ```
-    The API will be available at `http://localhost:8080`.
-
-## 🛣️ API Endpoints
-
-### Auth
-* `POST /api/auth/register` - Register a new user.
-* `POST /api/auth/login` - Authenticate and receive a JWT.
-
-### Pets (User)
-* `GET /api/pets` - List all pets owned by the authenticated user.
-* `POST /api/pets` - Create a new pet.
-* `POST /api/pets/{id}/feed` - Increase pet hunger stats.
-* `POST /api/pets/{id}/play` - Increase happiness/decrease energy.
-
-### Pets (Admin)
-* `GET /api/pets/all` - List every pet in the system (Requires `ROLE_ADMIN`).
-
-## 🧠 AI Collaboration & Troubleshooting
-
-During development, we collaborated with **Gemini 3 Flash** to resolve critical architectural challenges:
-
-* **JSON Parsing Errors:** Refactored Controller responses from plain `String` to `Map` or `DTO` to ensure valid JSON output for the frontend.
-* **CORS Configuration:** Implemented a global CORS policy to allow secure requests from the Next.js frontend (port 3000).
-* **H2 Console Security:** Adjusted Spring Security filters to allow frame-options for database debugging without compromising API security.
-
-## 📂 Project Structure
-
-```text
-src/main/java/com/virtualpet/virtualpetapi/
-├── config/         # Security and CORS configurations
-├── controller/     # REST Controllers
-├── dto/            # Request and Response (Records)
-├── model/          # JPA Entities (User, Pet, Role)
-├── repository/     # Spring Data JPA Repositories
-└── service/        # Business logic implementation
+Open http://localhost:3000 with your browser to see the result.
