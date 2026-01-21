@@ -9,7 +9,7 @@ export interface AuthResponse {
   tokenType?: string;
   username: string;
   roles: string[];
-  token?: string; // Campo virtual para compatibilidad con el Context
+  token?: string; 
 }
 
 export interface PetRequest { name: string; species: string }
@@ -24,12 +24,12 @@ export interface PetResponse {
   health: number
   ownerUsername: string
 }
+
 class ApiClient {
   private getToken(): string | null {
     if (typeof window === "undefined") return null;
     const token = localStorage.getItem("token");
     if (!token) return null;
-    // Limpieza de comillas extras si existen
     return token.replace(/^["'](.+)["']$/, '$1').trim();
   }
 
@@ -49,11 +49,9 @@ class ApiClient {
     const text = await response.text();
     let data;
     
-    // Intentamos parsear solo si hay contenido
     try {
       data = text ? JSON.parse(text) : null;
     } catch (e) {
-      // Si falla el parseo, guardamos el texto plano
       data = null;
     }
     
@@ -63,11 +61,17 @@ class ApiClient {
         if (window.location.pathname !== "/") window.location.href = "/";
       }
       
+      // Construimos un objeto de error enriquecido para que el Frontend lo lea fácilmente
       const errorMessage = data?.message || text || "Error en la petición";
-      throw new Error(errorMessage);
+      const error = new Error(errorMessage) as any;
+      
+      // Añadimos la propiedad 'response' para compatibilidad con el catch del Dialog
+      error.response = { data: data || { message: errorMessage } };
+      
+      throw error;
     }
 
-    return data || { message: text }; // Devolvemos el objeto parseado o el texto envuelto
+    return data || { message: text };
   }
 
   // --- Autenticación ---
@@ -132,6 +136,16 @@ class ApiClient {
   async createPet(data: { name: string; species: string }): Promise<PetResponse> {
     const res = await fetch(`${API_BASE_URL}/pets`, {
       method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(res);
+  }
+
+  // MÉTODO CORREGIDO: Añadido para habilitar la edición
+  async updatePet(id: number, data: { name: string; species: string }): Promise<PetResponse> {
+    const res = await fetch(`${API_BASE_URL}/pets/${id}`, {
+      method: "PUT",
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });

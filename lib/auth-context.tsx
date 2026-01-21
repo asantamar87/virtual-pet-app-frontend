@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user")
     localStorage.removeItem("token")
     setUser(null)
-    router.replace("/") // Redirigir al login inmediatamente
+    router.replace("/") 
   }, [router])
 
   useEffect(() => {
@@ -34,15 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const strUser = localStorage.getItem("user")
         const token = localStorage.getItem("token")
-
         if (strUser && token) {
-          const parsedUser = JSON.parse(strUser)
-          // Sincronizamos el estado global con el token fresco
-          setUser({ ...parsedUser, token })
+          setUser({ ...JSON.parse(strUser), token })
         }
       } catch (e) {
-        console.error("Error cargando sesión:", e)
-        logout() // Si hay error en el storage, limpiamos por seguridad
+        console.error("Error loading session:", e)
+        logout()
       } finally {
         setIsLoading(false)
       }
@@ -52,34 +49,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSetUser = (newUser: User | null) => {
     if (newUser) {
-      setUser(newUser)
-      // Separamos el token para guardarlo en llaves distintas
       const { token, ...userData } = newUser
       localStorage.setItem("user", JSON.stringify(userData))
-      if (token) {
-        localStorage.setItem("token", token)
-      }
+      if (token) localStorage.setItem("token", token)
+      setUser(newUser)
     } else {
       logout()
     }
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      setUser: handleSetUser, 
-      isLoading, 
-      logout 
-    }}>
-      {children}
+    <AuthContext.Provider value={{ user, setUser: handleSetUser, isLoading, logout }}>
+      {/* BLOQUEO CRÍTICO: No renderiza nada hasta que isLoading sea false */}
+      {!isLoading ? children : (
+        <div className="h-screen flex items-center justify-center bg-background">
+          <div className="animate-pulse text-primary font-medium">Iniciando sistema...</div>
+        </div>
+      )}
     </AuthContext.Provider>
   )
 }
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth debe estar dentro de AuthProvider")
-  }
+  if (!context) throw new Error("useAuth debe estar dentro de AuthProvider")
   return context
 }

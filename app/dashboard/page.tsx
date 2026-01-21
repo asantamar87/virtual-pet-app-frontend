@@ -1,7 +1,7 @@
 "use client"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { UserDashboard } from "@/components/user-dashboard"
 import { AdminDashboard } from "@/components/admin-dashboard"
 import { Loader2 } from "lucide-react"
@@ -9,22 +9,16 @@ import { Loader2 } from "lucide-react"
 export default function DashboardPage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
 
-  // 1. Aseguramos el montaje del componente para evitar errores de Next.js
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // 2. Manejo de redirección: Solo si YA terminó de cargar y NO hay usuario
-  useEffect(() => {
-    if (mounted && !isLoading && !user) {
+    // Si ya cargó y NO hay usuario, mandarlo al login
+    if (!isLoading && !user) {
       router.replace("/")
     }
-  }, [user, isLoading, router, mounted])
+  }, [user, isLoading, router])
 
-  // 3. Mientras carga o no está montado, mostramos el spinner
-  if (!mounted || isLoading) {
+  // Bloqueo de renderizado preventivo
+  if (isLoading || !user) {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4 bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -33,10 +27,7 @@ export default function DashboardPage() {
     )
   }
 
-  // 4. Si después de cargar NO hay usuario, retornamos null (el useEffect redirigirá)
-  if (!user) return null
-
-  // 5. Lógica de roles (verificamos ambos formatos por si acaso)
+  // Lógica de roles
   const isAdmin = user.roles?.some((role: string) => 
     role === "ROLE_ADMIN" || role === "ADMIN"
   )
